@@ -18,7 +18,7 @@ class AIExecutionService {
       ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
       : null;
     
-    this.model = this.genAI ? this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }) : null;
+    this.model = this.genAI ? this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null;
     this.maxSteps = 150;
   }
 
@@ -39,6 +39,7 @@ class AIExecutionService {
       return {
         success: true,
         algorithmType: parsed.algorithmType,
+        graphStructure: parsed.graphStructure,
         steps: parsed.steps
       };
     } catch (error) {
@@ -70,6 +71,12 @@ Identify algorithm type (sorting, bfs, dfs, graph, unknown).
 
 Simulate algorithm step-by-step logically.
 
+Additionally, extract graph structure from the code.
+Return graphStructure with:
+- nodes array
+- edges array (pairs of connected nodes)
+Only include this for graph-based algorithms.
+
 Return ONLY valid JSON.
 
 Do not include markdown.
@@ -97,8 +104,12 @@ Final JSON must be:
 
 {
 "algorithmType": "",
+"graphStructure": null OR { "nodes":[], "edges":[] },
 "steps": []
 }
+
+For sorting algorithms, graphStructure must be null.
+For graph-based algorithms (bfs, dfs, graph), extract the actual graph structure from the code.
 
 Now analyze this code:
 
@@ -128,6 +139,28 @@ ${code}
 
       if (!Array.isArray(parsed.steps)) {
         throw new Error('Steps must be an array in AI response');
+      }
+
+      // Validate graphStructure for graph-based algorithms
+      const graphAlgorithms = ['bfs', 'dfs', 'graph'];
+      if (graphAlgorithms.includes(parsed.algorithmType)) {
+        if (!parsed.graphStructure) {
+          throw new Error('Graph algorithms must include graphStructure in AI response');
+        }
+        
+        if (!parsed.graphStructure.nodes || !Array.isArray(parsed.graphStructure.nodes)) {
+          throw new Error('graphStructure.nodes must be an array in AI response');
+        }
+        
+        if (!parsed.graphStructure.edges || !Array.isArray(parsed.graphStructure.edges)) {
+          throw new Error('graphStructure.edges must be an array in AI response');
+        }
+      } else {
+        // For non-graph algorithms, graphStructure should be null
+        if (parsed.graphStructure !== null && parsed.graphStructure !== undefined) {
+          // Not a critical error, but log warning
+          console.warn('Non-graph algorithm returned graphStructure, ignoring it');
+        }
       }
 
       if (parsed.steps.length > this.maxSteps) {

@@ -27,6 +27,7 @@ const executeController = {
         res.json({
           success: true,
           algorithmType: aiResult.algorithmType,
+          graphStructure: aiResult.graphStructure,
           steps: transformedSteps,
           stats: {
             totalSteps: transformedSteps.length,
