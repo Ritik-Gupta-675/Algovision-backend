@@ -4,6 +4,10 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const executeRoutes = require('./routes/executeRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const leetcodeRoutes = require('./routes/leetcodeRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const codeVisualizerRoutes = require('./routes/codeVisualizerRoutes');
 
 const app = express();
 
@@ -24,6 +28,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/execute', executeRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/leetcode', leetcodeRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/codevisualizer', codeVisualizerRoutes);
 
 app.get('/', (req, res) => {
   res.json({
@@ -31,7 +39,20 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       execute: 'POST /api/execute - Execute Python code',
-      health: 'GET /health - Health check'
+      chat: 'POST /api/chat - AI assistant chat',
+      leetcode: {
+        connect: 'POST /api/leetcode/connect',
+        profile: 'GET /api/leetcode/profile/:username',
+        stats: 'GET /api/leetcode/stats/:username',
+        problem: 'POST /api/leetcode/problem',
+      },
+      ai: {
+        hint: 'POST /api/ai/hint',
+        approach: 'POST /api/ai/approach',
+        solution: 'POST /api/ai/solution',
+        recommendations: 'POST /api/ai/recommendations',
+      },
+      health: 'GET /health - Health check',
     }
   });
 });
